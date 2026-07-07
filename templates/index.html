@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Face Mask Detection Puskesmas KUTABUMI</title>
+
+    <!-- Font Awesome Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <!-- Chart JS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+      :root {
+        --primary: #3b82f6;
+        --primary-soft: #f0f6ff;
+        --success: #1e3a8a; /* Navy Blue */
+        --success-soft: #eff6ff;
+        --danger: #ff0000; /* Merah Terang */
+        --danger-soft: #fff5f5;
+        --warning: #f59e0b;
+        --warning-soft: #fffbeb;
+        --slate-50: #f8fafc;
+        --slate-100: #f1f5f9;
+        --slate-200: #e2e8f0;
+        --slate-700: #334155;
+        --slate-900: #0f172a;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      }
+
+      body {
+        background-color: var(--slate-50);
+        color: var(--slate-900);
+        overflow-x: hidden;
+      }
+
+      /* SIDEBAR STYLING */
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 260px;
+        height: 100vh;
+        background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+        padding: 24px 16px;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 999;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .sidebar.collapsed {
+        width: 85px;
+      }
+
+      .logo {
+        text-align: center;
+        color: white;
+        margin-bottom: 35px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 20px;
+      }
+
+      .logo i {
+        font-size: 42px;
+        color: #38bdf8;
+        margin-bottom: 12px;
+      }
+
+      .logo h2 {
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+      }
+
+      .logo p {
+        font-size: 12px;
+        opacity: 0.6;
+        margin-top: 2px;
+      }
+
+      .sidebar.collapsed .logo h2,
+      .sidebar.collapsed .logo p,
+      .sidebar.collapsed .menu span {
+        display: none;
+      }
+
+      .menu {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .menu a {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 14px 16px;
+        border-radius: 12px;
+        text-decoration: none;
+        color: #94a3b8;
+        font-weight: 500;
+        transition: all 0.2s ease;
+      }
+
+      .menu a:hover, .menu a.active {
+        background: rgba(255, 255, 255, 0.08);
+        color: white;
+      }
+
+      .menu a.active i {
+        color: #38bdf8;
+      }
+
+      .menu i {
+        font-size: 20px;
+        width: 24px;
+        text-align: center;
+      }
+
+      /* MAIN STYLING */
+      .main {
+        margin-left: 260px;
+        padding: 30px;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        min-height: 100vh;
+      }
+
+      .main.expand {
+        margin-left: 85px;
+      }
+
+      /* TOPBAR */
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        background: white;
+        padding: 16px 24px;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        border: 1px solid var(--slate-200);
+      }
+
+      .title {
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--slate-900);
+        letter-spacing: -0.5px;
+      }
+
+      .top-buttons {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+      }
+
+      .clock-display {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--slate-700);
+        background: var(--slate-100);
+        padding: 8px 14px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid var(--slate-200);
+      }
+
+      .btn {
+        border: 1px solid var(--slate-200);
+        padding: 10px 18px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--slate-700);
+        background: white;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .btn:hover {
+        background: var(--slate-100);
+        border-color: #cbd5e1;
+      }
+
+      .btn-primary {
+        background: #2563eb;
+        color: white;
+        border: none;
+      }
+
+      .btn-primary:hover {
+        background: #1d4ed8;
+      }
+
+      .btn-toggle {
+        background: #10b981;
+        color: white;
+        border: none;
+      }
+      .btn-toggle.system-off {
+        background: #ef4444;
+      }
+
+      /* CARDS DESIGN */
+      .card {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        border: 1px solid var(--slate-200);
+      }
+
+      .card h2 {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--slate-700);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      /* GRID SYSTEM */
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+      }
+
+      @media (max-width: 992px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* MONITORING CARDS DESIGN */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+        margin-bottom: 24px;
+      }
+
+      .stat-box {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border: 1px solid var(--slate-200);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .stat-box:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.04);
+      }
+
+      .stat-box-info h3 {
+        font-size: 13px;
+        color: #64748b;
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+      }
+
+      .stat-box-info h1 {
+        font-size: 36px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        line-height: 1;
+      }
+
+      .stat-box-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+      }
+
+      .icon-mask { background-color: var(--success-soft); color: var(--success); }
+      .icon-nomask { background-color: var(--danger-soft); color: var(--danger); }
+      .icon-total { background-color: var(--primary-soft); color: var(--primary); }
+      .icon-compliance { background-color: var(--warning-soft); color: var(--warning); }
+
+      /* VIDEO AREA */
+      .video-box-container {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 4/3;
+        background: #020617;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-top: 15px;
+      }
+
+      .camera {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .camera-overlay-off {
+        position: absolute;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.9);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        gap: 12px;
+        display: none;
+      }
+
+      .camera-overlay-off i {
+        font-size: 48px;
+        color: #ef4444;
+      }
+
+      /* AREA KENDALI PINTU (DIPERBESAR) */
+      .door-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 15px 0;
+        height: calc(100% - 35px);
+        min-height: 380px; /* Ditambah biar lebih lega */
+      }
+
+      .door {
+        width: 95%; /* Diperluas dari 85% */
+        max-width: 420px; /* Diperbesar signifikan dari 280px */
+        height: auto;
+        object-fit: contain;
+        transition: transform 0.3s ease;
+      }
+
+      .door-badge {
+        margin-top: 20px;
+        padding: 10px 24px;
+        border-radius: 30px;
+        font-weight: 700;
+        font-size: 16px;
+        text-align: center;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      }
+
+      .badge-success { background: #ecfdf5; color: #10b981; }
+      .badge-danger { background: #fef2f2; color: #ef4444; }
+
+      .section {
+        display: none;
+      }
+
+      .section.active {
+        display: block;
+        animation: fadeIn 0.4s ease;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .table-container {
+        max-height: 420px;
+        overflow-y: auto;
+        margin-top: 15px;
+        border-radius: 12px;
+        border: 1px solid var(--slate-200);
+      }
+
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 14px;
+      }
+
+      .table th {
+        background: var(--slate-100);
+        color: var(--slate-700);
+        font-weight: 600;
+        padding: 14px 16px;
+        position: sticky;
+        top: 0;
+        border-bottom: 1px solid var(--slate-200);
+      }
+
+      .table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--slate-100);
+        color: #475569;
+      }
+
+      .table tr:hover td {
+        background: var(--slate-50);
+      }
+
+      .search {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid var(--slate-200);
+        border-radius: 10px;
+        margin-bottom: 15px;
+        font-size: 14px;
+        outline: none;
+        transition: border 0.2s ease;
+      }
+
+      .search:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+
+      canvas {
+        margin-top: 20px;
+        width: 100% !important;
+      }
+
+      #popup {
+        position: fixed;
+        top: 24px;
+        right: 24px;
+        padding: 16px 24px;
+        border-radius: 12px;
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        z-index: 10000;
+        display: none;
+        animation: slideIn 0.3s ease;
+      }
+
+      @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- SIDEBAR NAVIGATION -->
+    <div class="sidebar" id="sidebar">
+      <div class="logo">
+        <i class="fa-solid fa-hospital"></i>
+        <h2>Puskesmas KUTABUMI</h2>
+        <p>Face Mask Detection</p>
+      </div>
+
+      <div class="menu">
+        <a href="#" id="nav-dashboard" class="active" onclick="showSection('dashboard')">
+          <i class="fa-solid fa-gauge-high"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="#" id="nav-monitoring" onclick="showSection('monitoring')">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>Monitoring</span>
+        </a>
+        <a href="#" id="nav-history" onclick="showSection('history')">
+          <i class="fa-solid fa-history"></i>
+          <span>History Log</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT AREA -->
+    <div class="main" id="main">
+      <div class="topbar">
+        <h1 class="title">FACE MASK DETECTION PUSKESMAS KUTABUMI</h1>
+        <div class="top-buttons">
+          <div class="clock-display">
+            <i class="fa-regular fa-clock" style="color: var(--primary);"></i>
+            <span id="clock">00:00:00</span>
+          </div>
+          <button id="toggle-sys-btn" class="btn btn-toggle" onclick="toggleSystem()">
+            <i class="fa-solid fa-power-off"></i> <span id="btn-text">SISTEM: ON</span>
+          </button>
+          <button class="btn" onclick="toggleSidebar()">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- SECTION: DASHBOARD -->
+      <div id="dashboard" class="section active">
+        <div class="grid">
+          <!-- LIVE VIDEO FEED -->
+          <div class="card">
+            <h2><i class="fa-solid fa-video" style="color: #ef4444;"></i> Live Video Camera</h2>
+            <div class="video-box-container">
+              <img src="{{ url_for('video') }}" class="camera" id="camera-feed" />
+              <div class="camera-overlay-off" id="camera-overlay">
+                <i class="fa-solid fa-video-slash"></i>
+                <h3>Sistem Deteksi Nonaktif</h3>
+                <p style="font-size: 13px; opacity: 0.7;">Petugas sedang melakukan pengecekan data.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- KENDALI PINTU (PINTU LEBIH GEDE) -->
+          <div class="card" style="display: flex; flex-direction: column;">
+            <h2><i class="fa-solid fa-door-closed" style="color: var(--primary);"></i> Status Kendali Pintu</h2>
+            <div id="door-area" class="door-wrapper">
+              <div style="text-align: center; color: var(--slate-700);">
+                <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 32px; margin-bottom: 15px; color: #cbd5e1;"></i>
+                <p>MENUNGGU DETEKSI OBJEK...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <br />
+
+        <!-- STATUS OPERASIONAL -->
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <h2><i class="fa-solid fa-gears" style="color: var(--primary);"></i> Status Operasional</h2>
+              <p style="margin-top: 4px; color: #64748b; font-size: 14px;">
+                Pemantauan penggunaan masker otomatis terhubung dengan kunci solenoid fisik pintu otomatis.
+              </p>
+            </div>
+            <h3 id="system-status" style="color: #10b981; font-size: 20px; font-weight: 700;">🟢 SISTEM AKTIF</h3>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION: MONITORING -->
+      <div id="monitoring" class="section">
+        <!-- 4 STATS BOXES -->
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="stat-box-info">
+              <h3>Bermasker</h3>
+              <h1 style="color: var(--success);" id="mask-count">0</h1>
+            </div>
+            <div class="stat-box-icon icon-mask">
+              <i class="fa-solid fa-head-side-mask"></i>
+            </div>
+          </div>
+          
+          <div class="stat-box">
+            <div class="stat-box-info">
+              <h3>Tanpa Masker</h3>
+              <h1 style="color: var(--danger);" id="nomask-count">0</h1>
+            </div>
+            <div class="stat-box-icon icon-nomask">
+              <i class="fa-solid fa-user-slash"></i>
+            </div>
+          </div>
+
+          <div class="stat-box">
+            <div class="stat-box-info">
+              <h3>Total Deteksi</h3>
+              <h1 style="color: var(--primary);" id="total-count">0</h1>
+            </div>
+            <div class="stat-box-icon icon-total">
+              <i class="fa-solid fa-users"></i>
+            </div>
+          </div>
+
+          <div class="stat-box">
+            <div class="stat-box-info">
+              <h3>Rasio Kepatuhan</h3>
+              <h1 style="color: var(--warning);" id="compliance">0%</h1>
+            </div>
+            <div class="stat-box-icon icon-compliance">
+              <i class="fa-solid fa-chart-pie"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- DIAGRAM GRID (NAVY & BRIGHT RED) -->
+        <div class="grid">
+          <div class="card">
+            <h2><i class="fa-solid fa-chart-bar" style="color: var(--primary);"></i> Grafik Frekuensi Deteksi</h2>
+            <p style="font-size: 12px; color: #64748b; margin-top: 2px;">Data komparasi kuantitas realtime.</p>
+            <canvas id="barChart"></canvas>
+          </div>
+          <div class="card">
+            <h2><i class="fa-solid fa-chart-pie" style="color: var(--success);"></i> Distribusi Persentase</h2>
+            <p style="font-size: 12px; color: #64748b; margin-top: 2px;">Proporsi tingkat kepatuhan area rumah sakit.</p>
+            <div style="max-width: 290px; margin: 0 auto;">
+              <canvas id="pieChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION: HISTORY LOG -->
+      <div id="history" class="section">
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2><i class="fa-solid fa-database" style="color: var(--primary);"></i> Log Riwayat Akses Realtime</h2>
+            <button class="btn btn-primary" onclick="window.print()">
+              <i class="fa-solid fa-print"></i> CETAK LOG
+            </button>
+          </div>
+
+          <!-- INPUT FILTER PENCARIAN -->
+          <input
+            type="text"
+            id="search"
+            class="search"
+            placeholder="🔍 Cari berdasarkan ID, Status (Mask / No Mask), Hari, Tanggal..."
+            onkeyup="searchTable()"
+          />
+
+          <div class="table-container">
+            <div id="table-data">Menghubungkan ke database...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- POPUP INDICATOR -->
+      <div id="popup"></div>
+    </div>
+
+    <script>
+      function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("collapsed");
+        document.getElementById("main").classList.toggle("expand");
+      }
+
+      function showSection(id) {
+        document.querySelectorAll(".section").forEach(sec => sec.classList.remove("active"));
+        document.querySelectorAll(".menu a").forEach(link => link.classList.remove("active"));
+        
+        document.getElementById(id).classList.add("active");
+        document.getElementById("nav-" + id).classList.add("active");
+      }
+
+      async function toggleSystem() {
+        try {
+          const response = await fetch("/toggle_system");
+          const data = await response.json();
+          updateSystemUI(data.active);
+        } catch (error) {
+          console.error("Gagal melakukan switch sistem:", error);
+        }
+      }
+
+      function updateSystemUI(isActive) {
+        const sysStatus = document.getElementById("system-status");
+        const sysBtn = document.getElementById("toggle-sys-btn");
+        const btnText = document.getElementById("btn-text");
+        const overlay = document.getElementById("camera-overlay");
+
+        if (isActive) {
+          sysStatus.innerHTML = "🟢 SISTEM AKTIF";
+          sysStatus.style.color = "#10b981";
+          sysBtn.className = "btn btn-toggle";
+          btnText.innerText = "SISTEM: ON";
+          overlay.style.display = "none";
+          showPopup("🟢 Sistem AI Deteksi Masker Aktif", "#10b981");
+        } else {
+          sysStatus.innerHTML = "🔴 SISTEM NONAKTIF";
+          sysStatus.style.color = "#ef4444";
+          sysBtn.className = "btn btn-toggle system-off";
+          btnText.innerText = "SISTEM: OFF";
+          overlay.style.display = "flex";
+          showPopup("🔴 Sistem Deteksi Dinonaktifkan", "#ef4444");
+          resetDoorUI();
+        }
+      }
+
+      function resetDoorUI() {
+        document.getElementById("door-area").innerHTML = `
+          <div style="text-align: center; color: var(--slate-700);">
+            <i class="fa-solid fa-ban" style="font-size: 42px; margin-bottom: 15px; color: #ef4444"></i>
+            <p style="font-weight:700;">SISTEM OFF - PINTU TETAP TERKUNCI</p>
+          </div>`;
+      }
+
+      function showPopup(message, color) {
+        let popup = document.getElementById("popup");
+        popup.innerHTML = message;
+        popup.style.background = color;
+        popup.style.display = "block";
+        setTimeout(() => { popup.style.display = "none"; }, 3000);
+      }
+
+      // CHART SETUP: MASK = NAVY (#1e3a8a), NO MASK = MERAH TERANG (#ff0000)
+      const barChart = new Chart(document.getElementById("barChart").getContext("2d"), {
+        type: "bar",
+        data: {
+          labels: ["Bermasker (MASK)", "Tanpa Masker (NO MASK)"],
+          datasets: [{
+            data: [0, 0],
+            backgroundColor: ["#1e3a8a", "#ff0000"],
+            borderColor: ["#172554", "#991b1b"],
+            borderWidth: 1,
+            borderRadius: 6,
+            barThickness: 45
+          }]
+        },
+        options: { 
+          responsive: true, 
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: "#f1f5f9" }
+            },
+            x: {
+              grid: { display: false }
+            }
+          }
+        }
+      });
+
+      const pieChart = new Chart(document.getElementById("pieChart").getContext("2d"), {
+        type: "doughnut",
+        data: {
+          labels: ["Bermasker", "Tanpa Masker"],
+          datasets: [{
+            data: [0, 0],
+            backgroundColor: ["#1e3a8a", "#ff0000"],
+            borderColor: ["#fff", "#fff"],
+            borderWidth: 2
+          }]
+        },
+        options: { 
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } }
+          },
+          cutout: "70%"
+        }
+      });
+
+      async function loadRealtime() {
+        try {
+          const response = await fetch("/realtime");
+          const data = await response.json();
+
+          document.getElementById("mask-count").innerHTML = data.mask;
+          document.getElementById("nomask-count").innerHTML = data.nomask;
+          
+          const total = data.mask + data.nomask;
+          document.getElementById("total-count").innerHTML = total;
+
+          let compliance = total > 0 ? Math.round((data.mask / total) * 100) : 0;
+          document.getElementById("compliance").innerHTML = compliance + "%";
+
+          let searchInput = document.getElementById("search").value.trim();
+          if (searchInput === "") {
+            document.getElementById("table-data").innerHTML = data.table;
+          }
+
+          const sysStatusText = document.getElementById("system-status").innerHTML;
+          if (data.system && sysStatusText.includes("NONAKTIF")) {
+              updateSystemUI(true);
+          } else if (!data.system && sysStatusText.includes("SISTEM AKTIF")) {
+              updateSystemUI(false);
+          }
+
+          if (data.system) {
+            if (data.door === "open") {
+              document.getElementById("door-area").innerHTML = `
+                <img src="/static/door_open.png" class="door">
+                <div class="door-badge badge-success">AKSES DITERIMA (PINTU TERBUKA)</div>`;
+            } else if (data.door === "close") {
+              document.getElementById("door-area").innerHTML = `
+                <img src="/static/door_close.png" class="door">
+                <div class="door-badge badge-danger">AKSES DITOLAK (TERKUNCI)</div>`;
+            } else {
+              document.getElementById("door-area").innerHTML = `
+                <div style="text-align: center; color: var(--slate-700);">
+                  <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 32px; margin-bottom: 15px; color: #cbd5e1;"></i>
+                  <p>MENUNGGU DETEKSI OBJEK...</p>
+                </div>`;
+            }
+          }
+
+          barChart.data.datasets[0].data = [data.mask, data.nomask];
+          barChart.update();
+          pieChart.data.datasets[0].data = [data.mask, data.nomask];
+          pieChart.update();
+
+        } catch (error) {
+          console.error("Koneksi realtime putus:", error);
+        }
+      }
+
+      // LOGIKA SMART PENCARIAN PROTEKSI "MASK"
+      function searchTable() {
+        let input = document.getElementById("search").value.trim().toLowerCase();
+        let table = document.querySelector(".table");
+        if (!table) return;
+        let tr = table.getElementsByTagName("tr");
+        
+        let isNumeric = /^\d+$/.test(input);
+
+        for (let i = 1; i < tr.length; i++) {
+          let cells = tr[i].getElementsByTagName("td");
+          let matchFound = false;
+          
+          if (cells.length > 0) {
+            if (isNumeric) {
+              let idText = cells[0].textContent.trim().toLowerCase();
+              if (idText === input) {
+                matchFound = true;
+              }
+            } else if (input === "mask") {
+              let statusText = cells[1].textContent.trim().toLowerCase();
+              if (statusText === "mask") {
+                matchFound = true;
+              }
+            } else {
+              for (let j = 0; j < cells.length; j++) {
+                if (cells[j]) {
+                  let cellText = cells[j].textContent.trim().toLowerCase();
+                  if (cellText.includes(input)) {
+                    matchFound = true;
+                    break;
+                  }
+                }
+              }
+            }
+          }
+          tr[i].style.display = (input === "" || matchFound) ? "" : "none";
+        }
+      }
+
+      function updateClock() {
+        document.getElementById("clock").innerHTML = new Date().toLocaleTimeString("id-ID");
+      }
+
+      setInterval(updateClock, 1000);
+      setInterval(loadRealtime, 1000);
+      loadRealtime();
+    </script>
+  </body>
+</html>
